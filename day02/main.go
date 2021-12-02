@@ -68,8 +68,8 @@ func task2() {
 			aim += value
 		}
 	}
-	fmt.Printf("[Task 1] Y: %d, Z: %d, A: %d\n", positionY, positionZ, aim)
-	fmt.Printf("[Task 1] Result: %f\n", float64(positionY)*math.Abs(float64(positionZ)))
+	fmt.Printf("[Task 2] Y: %d, Z: %d, A: %d\n", positionY, positionZ, aim)
+	fmt.Printf("[Task 2] Result: %f\n", float64(positionY)*math.Abs(float64(positionZ)))
 }
 
 func main() {
