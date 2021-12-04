@@ -130,7 +130,6 @@ func task1() {
 		var wg sync.WaitGroup
 		wg.Add(len(boards))
 		for i, b := range boards {
-			i := i
 			b := b // https://stackoverflow.com/a/57080138
 			// if the assignment is not present we 'b' will change in scope later
 			go b.checkMark(n, checkChannels[i], &wg)
@@ -151,7 +150,6 @@ func task1() {
 		var wgBingo sync.WaitGroup
 		wgBingo.Add(len(foundMarkBoardsIds))
 		for i, fm := range foundMarkBoardsIds {
-			i := i
 			fm := fm
 			go boards[fm].checkBingo(bingoChannels[i], &wgBingo)
 		}
