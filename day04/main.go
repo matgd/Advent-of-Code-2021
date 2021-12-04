@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/matgd/advent2021/utils"
 )
@@ -26,21 +27,16 @@ func (b *BingoBoard) loadRow(row []int) {
 	b.marked = append(b.marked, make([]bool, len(row)))
 }
 
-func (b *BingoBoard) checkMark(mark int, checkChannel chan foundChannel) {
-	found := false
+func (b *BingoBoard) checkMark(mark int, checkChannel chan foundChannel, wg *sync.WaitGroup) {
+	defer wg.Done()
 	for i, row := range b.board {
 		for j, value := range row {
 			if value == mark {
 				b.marked[i][j] = true
 				b.lastMarked = value
-				found = true
 				checkChannel <- foundChannel{boardID: b.id, found: true}
 				return
 			}
-		}
-		if found {
-			checkChannel <- foundChannel{boardID: b.id, found: true}
-			return
 		}
 	}
 	checkChannel <- foundChannel{boardID: b.id, found: false}
@@ -55,12 +51,13 @@ func (b *BingoBoard) anyDiagonalMarked() bool {
 	return false
 }
 
-func (b *BingoBoard) checkBingo(chBingo chan bool, chLastMarked chan int) {
+func (b *BingoBoard) checkBingo(bingoChannel chan foundChannel, wg *sync.WaitGroup) {
+	defer wg.Done()
 	if b.anyDiagonalMarked() {
 		for i, row := range b.marked {
 			if utils.AllTrueArray(row) {
-				chBingo <- true
-				chLastMarked <- b.lastMarked
+				bingoChannel <- foundChannel{boardID: b.id, found: true}
+				return
 			}
 
 			column := make([]bool, len(b.marked))
@@ -68,13 +65,13 @@ func (b *BingoBoard) checkBingo(chBingo chan bool, chLastMarked chan int) {
 				column[j] = b.marked[j][i]
 			}
 			if utils.AllTrueArray(column) {
-				chBingo <- true
-				chLastMarked <- b.lastMarked
+				bingoChannel <- foundChannel{boardID: b.id, found: true}
+				return
 			}
 		}
 
 	}
-	chBingo <- false
+	bingoChannel <- foundChannel{boardID: b.id, found: false}
 }
 
 // check if column or row is filled
@@ -123,19 +120,50 @@ func task1() {
 	// lastMarkedChannel := make(chan int, 1)
 
 	// main loop
+	foundMarkBoardsIds := []int{}
 	for _, n := range drawnNumbers {
-		checkMarkChannel := make(chan foundChannel, len(boards))
-		for _, b := range boards {
-			go b.checkMark(n, checkMarkChannel)
+		var checkChannels []chan foundChannel
+		for range boards {
+			checkChannels = append(checkChannels, make(chan foundChannel, 1))
 		}
 
-		// foundMarkBoardsIds := []int{}
-		// for v := range checkMarkChannel {
-		// if v.found {
-		// foundMarkBoardsIds = append(foundMarkBoardsIds, v.boardID)
-		// }
-		// }
-		fmt.Println(len(checkMarkChannel))
+		var wg sync.WaitGroup
+		wg.Add(len(boards))
+		for i, b := range boards {
+			i := i
+			b := b // https://stackoverflow.com/a/57080138
+			// if the assignment is not present we 'b' will change in scope later
+			go b.checkMark(n, checkChannels[i], &wg)
+		}
+		wg.Wait()
+
+		for i := range checkChannels {
+			result := <-checkChannels[i]
+			if result.found {
+				foundMarkBoardsIds = append(foundMarkBoardsIds, result.boardID)
+			}
+		}
+
+		var bingoChannels []chan foundChannel
+		for range foundMarkBoardsIds {
+			bingoChannels = append(bingoChannels, make(chan foundChannel, 1))
+		}
+		var wgBingo sync.WaitGroup
+		wgBingo.Add(len(foundMarkBoardsIds))
+		for i, fm := range foundMarkBoardsIds {
+			i := i
+			fm := fm
+			go boards[fm].checkBingo(bingoChannels[i], &wgBingo)
+		}
+
+		wgBingo.Wait()
+		for i := range bingoChannels {
+			result := <-bingoChannels[i]
+			if result.found {
+				fmt.Println("Winner!", result.boardID, boards[result.boardID])
+				return
+			}
+		}
 	}
 
 }
