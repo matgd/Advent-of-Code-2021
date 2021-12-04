@@ -57,3 +57,13 @@ func GetFloatsFromInputFile(path string) []float64 {
 	}
 	return lines
 }
+
+// AllTrueArray checks if all values in array are true
+func AllTrueArray(arr []bool) bool {
+	for _, value := range arr {
+		if !value {
+			return false
+		}
+	}
+	return true
+}

@@ -35,6 +35,35 @@ func (b *BingoBoard) checkMark(mark int) {
 	}
 }
 
+func (b *BingoBoard) anyDiagonalMarked() bool {
+	for i := range b.marked[0] {
+		if b.marked[i][i] {
+			return true
+		}
+	}
+	return false
+}
+
+func (b *BingoBoard) checkBingo() bool {
+	if b.anyDiagonalMarked() {
+		for i, row := range b.marked {
+			if utils.AllTrueArray(row) {
+				return true
+			}
+
+			column := make([]bool, len(b.marked))
+			for j := range b.marked {
+				column[j] = b.marked[j][i]
+			}
+			if utils.AllTrueArray(column) {
+				return true
+			}
+		}
+
+	}
+	return false
+}
+
 // check if column or row is filled
 // start by checking if anything from diagonal is filled, if yes
 //       check rows and columns
@@ -55,10 +84,14 @@ func getBoardsFromInput(input []string) []BingoBoard {
 			continue
 		}
 
-		row := strings.Split(boardRow, " ")
-		rowNumbers := make([]int, len(row))
-		for i, number := range row {
-			rowNumbers[i], _ = strconv.Atoi(number)
+		rowWithEmptyStrings := strings.Split(boardRow, " ")
+
+		rowNumbers := []int{}
+		for _, value := range rowWithEmptyStrings {
+			if value != "" {
+				number, _ := strconv.Atoi(value)
+				rowNumbers = append(rowNumbers, number)
+			}
 		}
 		currentBoardFilled.loadRow(rowNumbers)
 	}
@@ -71,5 +104,10 @@ func main() {
 	boards := getBoardsFromInput(input)
 	fmt.Println(boards[0])
 	boards[0].checkMark(27)
+	boards[0].checkMark(2)
+	boards[0].checkMark(57)
+	boards[0].checkMark(4)
+	boards[0].checkMark(69)
 	fmt.Println(boards[0])
+	fmt.Println(boards[0].checkBingo())
 }
