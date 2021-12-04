@@ -10,8 +10,15 @@ import (
 
 // BingoBoard represnts bingo boards as array of arrays
 type BingoBoard struct {
-	board  [][]int
-	marked [][]bool
+	id         int
+	board      [][]int
+	marked     [][]bool
+	lastMarked int
+}
+
+type foundChannel struct {
+	boardID int
+	found   bool
 }
 
 func (b *BingoBoard) loadRow(row []int) {
@@ -19,20 +26,24 @@ func (b *BingoBoard) loadRow(row []int) {
 	b.marked = append(b.marked, make([]bool, len(row)))
 }
 
-func (b *BingoBoard) checkMark(mark int) {
+func (b *BingoBoard) checkMark(mark int, checkChannel chan foundChannel) {
 	found := false
 	for i, row := range b.board {
 		for j, value := range row {
 			if value == mark {
 				b.marked[i][j] = true
+				b.lastMarked = value
 				found = true
-				break
+				checkChannel <- foundChannel{boardID: b.id, found: true}
+				return
 			}
 		}
 		if found {
-			break
+			checkChannel <- foundChannel{boardID: b.id, found: true}
+			return
 		}
 	}
+	checkChannel <- foundChannel{boardID: b.id, found: false}
 }
 
 func (b *BingoBoard) anyDiagonalMarked() bool {
@@ -44,11 +55,12 @@ func (b *BingoBoard) anyDiagonalMarked() bool {
 	return false
 }
 
-func (b *BingoBoard) checkBingo() bool {
+func (b *BingoBoard) checkBingo(chBingo chan bool, chLastMarked chan int) {
 	if b.anyDiagonalMarked() {
 		for i, row := range b.marked {
 			if utils.AllTrueArray(row) {
-				return true
+				chBingo <- true
+				chLastMarked <- b.lastMarked
 			}
 
 			column := make([]bool, len(b.marked))
@@ -56,12 +68,13 @@ func (b *BingoBoard) checkBingo() bool {
 				column[j] = b.marked[j][i]
 			}
 			if utils.AllTrueArray(column) {
-				return true
+				chBingo <- true
+				chLastMarked <- b.lastMarked
 			}
 		}
 
 	}
-	return false
+	chBingo <- false
 }
 
 // check if column or row is filled
@@ -69,18 +82,14 @@ func (b *BingoBoard) checkBingo() bool {
 //       check rows and columns
 
 func getBoardsFromInput(input []string) []BingoBoard {
-	splitStringNumbers := strings.Split(input[0], ",")
-	drawnNumbers := make([]int, len(splitStringNumbers))
-	for i, stringNumber := range splitStringNumbers {
-		drawnNumbers[i], _ = strconv.Atoi(stringNumber)
-	}
-
 	boards := []BingoBoard{}
-	currentBoardFilled := BingoBoard{}
+	nextBoardID := 0
+	currentBoardFilled := BingoBoard{id: nextBoardID}
 	for _, boardRow := range input[2:] {
 		if boardRow == "" {
 			boards = append(boards, currentBoardFilled)
-			currentBoardFilled = BingoBoard{}
+			nextBoardID++
+			currentBoardFilled = BingoBoard{id: nextBoardID}
 			continue
 		}
 
@@ -99,15 +108,38 @@ func getBoardsFromInput(input []string) []BingoBoard {
 	return boards
 }
 
-func main() {
+func task1() {
 	input := utils.GetStringsFromInputFile("input.txt")
 	boards := getBoardsFromInput(input)
-	fmt.Println(boards[0])
-	boards[0].checkMark(27)
-	boards[0].checkMark(2)
-	boards[0].checkMark(57)
-	boards[0].checkMark(4)
-	boards[0].checkMark(69)
-	fmt.Println(boards[0])
-	fmt.Println(boards[0].checkBingo())
+
+	splitStringNumbers := strings.Split(input[0], ",")
+	drawnNumbers := make([]int, len(splitStringNumbers))
+	for i, stringNumber := range splitStringNumbers {
+		drawnNumbers[i], _ = strconv.Atoi(stringNumber)
+
+	}
+
+	// bingoChannel := make(chan bool)
+	// lastMarkedChannel := make(chan int, 1)
+
+	// main loop
+	for _, n := range drawnNumbers {
+		checkMarkChannel := make(chan foundChannel, len(boards))
+		for _, b := range boards {
+			go b.checkMark(n, checkMarkChannel)
+		}
+
+		// foundMarkBoardsIds := []int{}
+		// for v := range checkMarkChannel {
+		// if v.found {
+		// foundMarkBoardsIds = append(foundMarkBoardsIds, v.boardID)
+		// }
+		// }
+		fmt.Println(len(checkMarkChannel))
+	}
+
+}
+
+func main() {
+	task1()
 }
