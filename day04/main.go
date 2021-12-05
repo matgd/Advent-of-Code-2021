@@ -11,10 +11,9 @@ import (
 
 // BingoBoard represnts bingo boards as array of arrays
 type BingoBoard struct {
-	id         int
-	board      [][]int
-	marked     [][]bool
-	lastMarked int
+	id     int
+	board  [][]int
+	marked [][]bool
 }
 
 type foundChannel struct {
@@ -33,7 +32,6 @@ func (b *BingoBoard) checkMark(mark int, checkChannel chan foundChannel, wg *syn
 		for j, value := range row {
 			if value == mark {
 				b.marked[i][j] = true
-				b.lastMarked = value
 				checkChannel <- foundChannel{boardID: b.id, found: true}
 				return
 			}
@@ -158,7 +156,19 @@ func task1() {
 		for i := range bingoChannels {
 			result := <-bingoChannels[i]
 			if result.found {
-				fmt.Println("Winner!", result.boardID, boards[result.boardID])
+				winningBoard := boards[result.boardID]
+				fmt.Println("Winner!", result.boardID, winningBoard)
+
+				sumUnmarked := 0
+				for m, rowMarkings := range winningBoard.marked {
+					for n, v := range rowMarkings {
+						if !v {
+							sumUnmarked += winningBoard.board[m][n]
+						}
+					}
+				}
+				fmt.Println("[Task 1]:", sumUnmarked)
+				fmt.Println("[Task 1]:", sumUnmarked*n)
 				return
 			}
 		}
