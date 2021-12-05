@@ -176,6 +176,102 @@ func task1() {
 
 }
 
+func task2() {
+	input := utils.GetStringsFromInputFile("input.txt")
+	boards := getBoardsFromInput(input)
+
+	splitStringNumbers := strings.Split(input[0], ",")
+	drawnNumbers := make([]int, len(splitStringNumbers))
+	for i, stringNumber := range splitStringNumbers {
+		drawnNumbers[i], _ = strconv.Atoi(stringNumber)
+
+	}
+
+	// bingoChannel := make(chan bool)
+	// lastMarkedChannel := make(chan int, 1)
+
+	// main loop
+	foundMarkBoardsIds := []int{}
+	winningBoards := map[int]bool{}
+	for drawnNumbersIndex, n := range drawnNumbers {
+		var checkChannels []chan foundChannel
+		for range boards {
+			checkChannels = append(checkChannels, make(chan foundChannel, 1))
+		}
+
+		var wg sync.WaitGroup
+		wg.Add(len(boards))
+		for i, b := range boards {
+			b := b // https://stackoverflow.com/a/57080138
+			// if the assignment is not present we 'b' will change in scope later
+			go b.checkMark(n, checkChannels[i], &wg)
+		}
+		wg.Wait()
+
+		for i := range checkChannels {
+			result := <-checkChannels[i]
+			if result.found {
+				foundMarkBoardsIds = append(foundMarkBoardsIds, result.boardID)
+			}
+		}
+
+		var bingoChannels []chan foundChannel
+		for range foundMarkBoardsIds {
+			bingoChannels = append(bingoChannels, make(chan foundChannel, 1))
+		}
+		var wgBingo sync.WaitGroup
+		wgBingo.Add(len(foundMarkBoardsIds))
+		for i, fm := range foundMarkBoardsIds {
+			fm := fm
+			go boards[fm].checkBingo(bingoChannels[i], &wgBingo)
+		}
+
+		wgBingo.Wait()
+		for i := range bingoChannels {
+			result := <-bingoChannels[i]
+			if result.found {
+				winningBoard := boards[result.boardID]
+				if len(winningBoards) < len(boards)-1 {
+					winningBoards[winningBoard.id] = true
+					continue
+				}
+				for q := range boards {
+					if _, ok := winningBoards[q]; !ok {
+						winningBoard = boards[q]
+					}
+				}
+				for leftNumbersIndex := drawnNumbersIndex + 1; leftNumbersIndex < len(drawnNumbers); leftNumbersIndex++ {
+					lastBingo := make(chan foundChannel, 1)
+					wg.Add(1)
+					winningBoard.checkMark(drawnNumbers[leftNumbersIndex], lastBingo, &wg)
+					bingo := <-lastBingo
+					if bingo.found {
+						n = drawnNumbers[leftNumbersIndex]
+						break
+					}
+				}
+
+				fmt.Println("Last winner:", winningBoard.id, winningBoard)
+
+				sumUnmarked := 0
+				for m, rowMarkings := range winningBoard.marked {
+					for n, v := range rowMarkings {
+						if !v {
+							sumUnmarked += winningBoard.board[m][n]
+						}
+					}
+				}
+				fmt.Println("[Task 2]:", sumUnmarked)
+				fmt.Println("[Task 2]:", n)
+				fmt.Println("[Task 2]:", sumUnmarked*n)
+				return
+			}
+		}
+	}
+
+}
+
 func main() {
 	task1()
+	task2()
 }
