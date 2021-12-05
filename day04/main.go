@@ -187,9 +187,6 @@ func task2() {
 
 	}
 
-	// bingoChannel := make(chan bool)
-	// lastMarkedChannel := make(chan int, 1)
-
 	// main loop
 	foundMarkBoardsIds := []int{}
 	winningBoards := map[int]bool{}
