@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 )
 
 func getInputFromFile(path string) []string {
@@ -43,6 +44,22 @@ func GetIntegersFromInputFile(path string) []int {
 		lines = append(lines, integer)
 	}
 	return lines
+}
+
+// GetIntegersFromCSV returns array of integers from CSV file
+func GetIntegersFromCSV(path string) []int {
+	var numbers []int
+	for _, line := range getInputFromFile(path) {
+		stringNumbers := strings.Split(line, ",")
+		for _, n := range stringNumbers {
+			nInt, err := strconv.Atoi(n)
+			if err != nil {
+				log.Fatalf("Couldn't parse contents of file '%s' due to error: %s\n", path, err)
+			}
+			numbers = append(numbers, nInt)
+		}
+	}
+	return numbers
 }
 
 // GetFloatsFromInputFile returns input from file in from of integers in array
