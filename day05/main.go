@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/matgd/advent2021/utils"
 )
@@ -68,8 +69,7 @@ func mark(hitMap map[int]map[int]int, c coordinate) {
 	hitMap[c.x][c.y]++
 }
 
-func task1() {
-	coords := loadCoordinates()
+func task1(coords [][]coordinate) {
 	hitMap := map[int]map[int]int{}
 
 	for _, crd := range coords {
@@ -104,8 +104,7 @@ func task1() {
 	fmt.Println("[Task 1]:", moreThan2)
 }
 
-func task2() {
-	coords := loadCoordinates()
+func task2(coords [][]coordinate) {
 	hitMap := map[int]map[int]int{}
 
 	for _, crd := range coords {
@@ -137,7 +136,6 @@ func task2() {
 				y++
 			}
 		} else if isDiagonalBackslash(start, end) {
-			fmt.Println(start, end)
 			if start.y > end.y {
 				start, end = end, start
 			}
@@ -159,6 +157,12 @@ func task2() {
 	fmt.Println("[Task 2]:", moreThan2)
 }
 func main() {
-	task1()
-	task2()
+	coords := loadCoordinates()
+	start := time.Now()
+	task1(coords)
+	fmt.Println("Executed in", time.Since(start))
+
+	start = time.Now()
+	task2(coords)
+	fmt.Println("Executed in", time.Since(start))
 }
