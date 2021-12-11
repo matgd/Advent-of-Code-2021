@@ -64,7 +64,7 @@ func GetIntegersFromCSV(path string) []int {
 
 // GetMatrixFromInputFile returns array of arrays from input file
 // which includes one-digit numbers, non-seperated
-// in multiple files
+// in multiple lines
 func GetMatrixFromInputFile(path string) [][]int {
 	matrix := make([][]int, 0, 10)
 	for i, line := range getInputFromFile(path) {
