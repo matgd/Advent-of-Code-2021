@@ -62,6 +62,24 @@ func GetIntegersFromCSV(path string) []int {
 	return numbers
 }
 
+// GetMatrixFromInputFile returns array of arrays from input file
+// which includes one-digit numbers, non-seperated
+// in multiple files
+func GetMatrixFromInputFile(path string) [][]int {
+	matrix := make([][]int, 0, 10)
+	for i, line := range getInputFromFile(path) {
+		matrix = append(matrix, []int{})
+		for _, n := range line {
+			nInt, err := strconv.Atoi(string(n))
+			if err != nil {
+				log.Fatalf("Couldn't parse contents of file '%s' due to error: %s\n", path, err)
+			}
+			matrix[i] = append(matrix[i], nInt)
+		}
+	}
+	return matrix
+}
+
 // GetFloatsFromInputFile returns input from file in from of integers in array
 func GetFloatsFromInputFile(path string) []float64 {
 	var lines []float64
