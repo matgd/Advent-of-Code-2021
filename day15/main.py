@@ -32,6 +32,6 @@ def task2():
         g[u][(x, y)]['weight'] = risk_full[x, y]
     print('[Task 2]: Shortest path:', nx.shortest_path_length(g, (0, 0), (len_x*5-1, len_y*5-1), 'weight'))
 
-if '__name__' == '__name__':
+if __name__ == '__main__':
     task1()
     task2()
