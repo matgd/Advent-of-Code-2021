@@ -52,6 +52,6 @@ def task2(polymer):  # Thanks ThePrimeagen for the idea!
     count = sorted([(v, k) for k, v in count_map.items()], key=lambda x: x[0])
     print("[Task 2]:", count[-1][0] - count[0][0])
 
-if '__name__' == '__name__':
+if __name__ == '__main__':
     task1(starting_polymer)
     task2(starting_polymer)
