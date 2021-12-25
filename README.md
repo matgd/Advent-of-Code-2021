@@ -27,4 +27,4 @@ https://adventofcode.com/2021
 | 22 |  |  |
 | 23 |  |  |
 | 24 |  |  |
-| 25 |  |  |
+| 25 | ⭐ | Python |
